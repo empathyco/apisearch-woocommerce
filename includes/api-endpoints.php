@@ -90,7 +90,7 @@ add_action('rest_api_init', 'register_check_plugin_route');
 function register_set_index_id_route()
 {
     register_rest_route('apisearch', '/set-index-id', array(
-        'methods' => 'POST',
+        'methods' => 'PUT',
         'callback' => 'set_index_id_callback',
         'permission_callback' => 'apisearch_permission_callback',
         'args' => array(
