@@ -27,7 +27,7 @@ function get_apisearch_feed()
     $per_page = 10; // Set your desired number of products per batch
     $page = 1;
 
-    $jsonl = "";
+    header('Content-Type:text/plain; charset=utf-8');
 
     while (true) {
         // Initialize the query args array
@@ -58,13 +58,13 @@ function get_apisearch_feed()
             }
             // Serialize each product and echo it as JSON
             $apisearch_product = serialize_product_for_apisearch($product);
-            $jsonl .= json_encode($apisearch_product) . "\n";
+            echo(json_encode($apisearch_product));
+            echo PHP_EOL;
+            ob_flush();
         }
 
         $page++; // Move to the next page
     }
-
-    return $jsonl;
 
     exit;
 }
