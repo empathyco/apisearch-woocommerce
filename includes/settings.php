@@ -3,6 +3,8 @@
 // Function to register and initialize settings
 function register_apisearch_settings() {
     // Register settings with validation callbacks
+    register_setting('apisearch_settings', 'show_search_input', 'intval');
+    register_setting('apisearch_settings', 'index_id', 'sanitize_text_field');
     register_setting('apisearch_settings', 'index_product_without_image', 'intval');
     register_setting('apisearch_settings', 'index_product_purchase_count', 'intval');
     register_setting('apisearch_settings', 'index_non_available_products', 'intval');
@@ -28,6 +30,14 @@ function add_apisearch_settings_page()
 
 // Function to set default plugin settings during activation
 function set_default_apisearch_settings() {
+    if (false === get_option('show_search_input')) {
+        update_option('show_search_input', true);
+    }
+
+    if (false === get_option('index_id')) {
+        update_option('index_id', '');
+    }
+
     if (false === get_option('index_product_without_image')) {
         update_option('index_product_without_image', true);
     }
@@ -88,8 +98,17 @@ function render_apisearch_settings_page() {
             <?php settings_fields('apisearch_settings'); ?>
             <?php do_settings_sections('apisearch_settings'); ?>
 
-            <h3>Indexing Options</h3>
+            <h3>General</h3>
             <table class="form-table">
+                <tr>
+                    <th scope="row">Show Search Input</th>
+                    <td>
+                        <label for="show_search_input">
+                            <input type="checkbox" name="show_search_input" id="show_search_input" value="1" <?php checked(get_option('show_search_input'), 1); ?>>
+                            Show the search input
+                        </label>
+                    </td>
+                </tr>
 
                 <tr>
                     <th scope="row">Index ID</th>
@@ -97,7 +116,10 @@ function render_apisearch_settings_page() {
                         <input type="text" name="index_id" id="index_id" value="<?php echo esc_attr(get_option('index_id')); ?>" class="regular-text">
                     </td>
                 </tr>
+            </table>
 
+            <h3>Indexing Options</h3>
+            <table class="form-table">
                 <tr>
                     <th scope="row">Index Products Without Images</th>
                     <td>

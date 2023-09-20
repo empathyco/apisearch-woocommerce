@@ -1,0 +1,11 @@
+.apisearch-search-input-wrapper {
+    text-align: center;
+    padding: 10px;
+}
+
+.apisearch-search-input-wrapper input[type="search"] {
+    font-size: 16px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
