@@ -11,6 +11,7 @@ function register_apisearch_settings()
     register_setting('apisearch_settings', 'index_non_available_products', 'intval');
     register_setting('apisearch_settings', 'index_supplier_references', 'intval');
     register_setting('apisearch_settings', 'index_short_descriptions', 'intval');
+    register_setting('apisearch_settings', 'index_descriptions', 'intval');
     register_setting('apisearch_settings', 'uuid_auth_token', 'sanitize_text_field');
 }
 
@@ -58,6 +59,10 @@ function set_default_apisearch_settings()
 
     if (false === get_option('index_short_descriptions')) {
         update_option('index_short_descriptions', false);
+    }
+
+    if (false === get_option('index_descriptions')) {
+        update_option('index_descriptions', false);
     }
 
     // Set the default UUID auth token during activation
@@ -190,6 +195,16 @@ function render_apisearch_settings_page()
                     </td>
                 </tr>
 
+                <tr>
+                    <th scope="row">Index Descriptions</th>
+                    <td>
+                        <label for="index_descriptions">
+                            <input type="checkbox" name="index_descriptions" id="index_descriptions"
+                                   value="1" <?php checked(get_option('index_descriptions'), 1); ?>>
+                            Enable
+                        </label>
+                    </td>
+                </tr>
             </table>
 
 <!--            todo: temporary hiding auth token -->

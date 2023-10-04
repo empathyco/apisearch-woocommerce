@@ -1,6 +1,14 @@
 <?php
 
 
+function clean_list_apisearch($list) {
+    if (!is_array($list)) {
+        return $list;
+    }
+
+    return array_values(array_unique(array_filter($list)));
+}
+
 /**
  * Serialize a WooCommerce product to Apisearch format.
  *
@@ -9,41 +17,28 @@
  */
 function serialize_product_for_apisearch($product)
 {
-    // Get product categories
     $categories = wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'names'));
-//    $category_tree = get_product_category_tree($product->get_id());
-
-    // Get product tags
-    $tags = wp_get_post_terms($product->get_id(), 'product_tag', array('fields' => 'names'));
-
-    // Get product creation date
+    $tags = clean_list_apisearch(wp_get_post_terms($product->get_id(), 'product_tag', array('fields' => 'names')));
     $creation_date = get_post_field('post_date', $product->get_id());
-
-    // Convert creation date to Unix timestamp
     $creation_timestamp = strtotime($creation_date);
-
     $index_short_descriptions = get_option('index_short_descriptions');
+    $index_descriptions = get_option('index_description');
 
-    // Create the Apisearch product data
     $woocommerce_product = array(
         'id' => $product->get_id(),
         'title' => $product->get_title(),
         'description' => $product->get_description(),
         'short_description' => $product->get_short_description(),
         'image' => wp_get_attachment_url($product->get_image_id()),
-        'regular_price' => $product->get_regular_price(),
-        'sale_price' => $product->get_sale_price(),
+        'regular_price' => \round(\floatval($product->get_regular_price()), 2),
+        'sale_price' => \round(\floatval($product->get_sale_price())),
         'categories' => $categories,
         'sku' => $product->get_sku(),
         'product_url' => get_permalink($product->get_id()),
         'product_type' => $product->get_type(),
         'product_attributes' => $product->get_attributes(),
-        'weight' => $product->get_weight(),
-        'dimensions' => $product->get_dimensions(false),
         'tags' => $tags,
         'creation_datetime' => $creation_timestamp, // Add creation datetime in Unix timestamp format
-
-        // Add more fields as needed
     );
 
     $apisearch_product = array(
@@ -64,24 +59,31 @@ function serialize_product_for_apisearch($product)
         ),
         'indexed_metadata' => array(
             'as_version' => mt_rand(1000, 9999),
-            'price' => (float)$woocommerce_product['sale_price'],
+            'price' => $woocommerce_product['sale_price'],
+            'with_discount' => $woocommerce_product['regular_price'] - $woocommerce_product['sale_price'] > 0,
             'categories' => $categories,
+            'product_type' => $woocommerce_product['product_type'],
             'reference' => $woocommerce_product['sku'],
             "date_add" => $woocommerce_product['creation_datetime'],
         ),
         'searchable_metadata' => array(
             'name' => (string)$woocommerce_product['title'],
             'categories' => $categories,
-            'tags' => $tags,
+            'tags' => $woocommerce_product['tags'],
         ),
         'suggest' => $categories,
-        'exact_matching_metadata' => array(
-            $woocommerce_product['sku']
-        ),
+        'exact_matching_metadata' => clean_list_apisearch(array(
+            $woocommerce_product['sku'],
+            $woocommerce_product['reference']
+        )),
     );
 
+    if ($index_descriptions) {
+        $apisearch_product['searchable_metadata']['description'] = $woocommerce_product['description'];
+    }
+
     if ($index_short_descriptions) {
-        $apisearch_product['metadata']['short_description'] = $woocommerce_product['short_description'];
+        $apisearch_product['searchable_metadata']['short_description'] = $woocommerce_product['short_description'];
     }
 
     return $apisearch_product;
