@@ -41,6 +41,9 @@ function serialize_product_for_apisearch($product)
         'creation_datetime' => $creation_timestamp, // Add creation datetime in Unix timestamp format
     );
 
+    $currency_code = get_woocommerce_currency();
+    $currency_symbol = get_currency_symbol($currency_code);
+
     $apisearch_product = array(
         'uuid' => array(
             "id" => (string)$woocommerce_product['id'],
@@ -52,8 +55,9 @@ function serialize_product_for_apisearch($product)
             'image_id' => $product->get_image_id(),
             'image' => $woocommerce_product['image'],
             'old_price' => $woocommerce_product['regular_price'],
-            'old_price_with_currency' => $woocommerce_product['regular_price'] . ' €',
-            'price_with_currency' => $woocommerce_product['sale_price'] . ' €',
+            'old_price_with_currency' => $woocommerce_product['regular_price'] . ' ' . $currency_symbol,
+            'price' => $woocommerce_product['sale_price'],
+            'price_with_currency' => $woocommerce_product['sale_price'] . ' ' . $currency_symbol,
             'show_price' => true,
             'supplier_reference' => [],
         ),
@@ -78,15 +82,53 @@ function serialize_product_for_apisearch($product)
         )),
     );
 
+
+    // prices of variations
+    if ($product->is_type('variable')) {
+        $variations = $product->get_available_variations();
+
+        // sort by price so we can get in and max
+        usort($variations, function($a, $b) {
+            $price_a = wc_get_product($a['variation_id'])->get_price();
+            $price_b = wc_get_product($b['variation_id'])->get_price();
+            return $price_a - $price_b;
+        });
+
+        if (!empty($variations)) {
+            // First variation has the minimum price
+            $min_price = wc_get_product($variations[0]['variation_id'])->get_price();
+
+            // Last variation has the maximum price
+            $max_price = wc_get_product(end($variations)['variation_id'])->get_price();
+
+            $apisearch_product['metadata']['min_price'] = $min_price;
+            $apisearch_product['metadata']['min_price_with_currency'] = $min_price . ' ' . $currency_symbol;
+            $apisearch_product['metadata']['max_price'] = $max_price;
+            $apisearch_product['metadata']['max_price_with_currency'] = $max_price . ' ' . $currency_symbol;
+        }
+    }
+
     if ($index_descriptions) {
         $apisearch_product['searchable_metadata']['description'] = $woocommerce_product['description'];
     }
 
+    // short description
     if ($index_short_descriptions) {
         $apisearch_product['searchable_metadata']['short_description'] = $woocommerce_product['short_description'];
     }
 
     return $apisearch_product;
+}
+
+function get_currency_symbol($currency_code) {
+    $currency_symbols = array(
+        'USD' => '$',
+        'EUR' => '€',
+        'GBP' => '£',
+        // Add more currency codes and symbols as needed
+    );
+
+    return isset($currency_symbols[$currency_code]) ? $currency_symbols[$currency_code] : '';
 }
 
 function get_product_category_tree($product_id)
