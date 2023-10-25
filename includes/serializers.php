@@ -9,6 +9,11 @@ function clean_list_apisearch($list) {
     return array_values(array_unique(array_filter($list)));
 }
 
+function price_with_currency($price)
+{
+    return html_entity_decode(strip_tags(wc_price($price)));
+}
+
 /**
  * @param $product
  * @param $withTax
@@ -59,8 +64,8 @@ function serialize_product_for_apisearch($product, $withTax)
             'image_id' => $product->get_image_id(),
             'image' => $woocommerce_product['image'],
             'old_price' => $woocommerce_product['regular_price'],
-            'old_price_with_currency' => strip_tags(wc_price($woocommerce_product['regular_price'])),
-            'price_with_currency' => strip_tags(wc_price($woocommerce_product['sale_price'])),
+            'old_price_with_currency' => price_with_currency($woocommerce_product['regular_price']),
+            'price_with_currency' => price_with_currency($woocommerce_product['sale_price']),
             'show_price' => true,
             'supplier_reference' => [],
         ),
@@ -99,17 +104,23 @@ function serialize_product_for_apisearch($product, $withTax)
 
         if (!empty($variations)) {
             // First variation has the minimum price
-            $min_price = wc_get_product($variations[0]['variation_id'])->get_price();
 
-            // Last variation has the maximum price
-            $max_price = wc_get_product(end($variations)['variation_id'])->get_price();
+            $firstVariantProduct = wc_get_product($variations[0]['variation_id']);
+            $lastVariantProduct = wc_get_product(end($variations)['variation_id']);
+            if ($withTax) {
+                $minPrice = \round(\floatval(wc_get_price_including_tax($firstVariantProduct, $firstVariantProduct->get_sale_price())), 2);
+                $maxPrice = \round(\floatval(wc_get_price_including_tax($lastVariantProduct, $lastVariantProduct->get_regular_price())), 2);
+            } else {
+                $minPrice = \round(\floatval(wc_get_price_excluding_tax($firstVariantProduct, $firstVariantProduct->get_sale_price())), 2);
+                $maxPrice = \round(\floatval(wc_get_price_excluding_tax($lastVariantProduct, $lastVariantProduct->get_regular_price())), 2);
+            }
 
-            $apisearch_product['indexed_metadata']['price'] = $min_price;
-            $apisearch_product['metadata']['min_price'] = $min_price;
-            $apisearch_product['metadata']['price_with_currency'] = strip_tags(wc_price($min_price));
+            $apisearch_product['indexed_metadata']['price'] = $minPrice;
+            $apisearch_product['metadata']['min_price'] = $minPrice;
+            $apisearch_product['metadata']['price_with_currency'] = price_with_currency($minPrice);
             $apisearch_product['metadata']['min_price_with_currency'] = $apisearch_product['metadata']['price_with_currency'] ;
-            $apisearch_product['metadata']['max_price'] = $max_price;
-            $apisearch_product['metadata']['max_price_with_currency'] = strip_tags(wc_price($max_price));
+            $apisearch_product['metadata']['max_price'] = $maxPrice;
+            $apisearch_product['metadata']['max_price_with_currency'] = price_with_currency($maxPrice);
         }
     }
 
