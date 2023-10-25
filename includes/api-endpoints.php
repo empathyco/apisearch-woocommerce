@@ -47,7 +47,14 @@ function get_apisearch_feed()
                 }
             }
             // Serialize each product and echo it as JSON
-            $apisearch_product = serialize_product_for_apisearch($product, $withTax);
+            try {
+                $apisearch_product = serialize_product_for_apisearch($product, $withTax);
+            } catch (\Exception $exception) {
+                var_dump($exception->getMessage());
+                var_dump($exception->getFile());
+                var_dump($exception->getLine());
+                die();
+            }
             echo json_encode($apisearch_product);
             echo PHP_EOL;
             ob_flush();
@@ -114,6 +121,7 @@ function register_apisearch_rest_routes()
     register_rest_route('apisearch', '/check', array(
         'methods' => 'GET',
         'callback' => 'check_plugin_status',
+        'permission_callback' => 'apisearch_permission_callback',
     ));
 
     // Register a custom REST API route for setting the index_id
