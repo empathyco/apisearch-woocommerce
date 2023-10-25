@@ -10,12 +10,11 @@ function clean_list_apisearch($list) {
 }
 
 /**
- * Serialize a WooCommerce product to Apisearch format.
- *
- * @param WC_Product $product The WooCommerce product to be serialized.
- * @return array The product data in Apisearch format.
+ * @param $product
+ * @param $withTax
+ * @return array
  */
-function serialize_product_for_apisearch($product)
+function serialize_product_for_apisearch($product, $withTax)
 {
     $categories = wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'names'));
     $tags = clean_list_apisearch(wp_get_post_terms($product->get_id(), 'product_tag', array('fields' => 'names')));
@@ -24,14 +23,22 @@ function serialize_product_for_apisearch($product)
     $index_short_descriptions = get_option('index_short_descriptions');
     $index_descriptions = get_option('index_description');
 
+    if ($withTax) {
+        $price = \round(\floatval(wc_get_price_including_tax($product, $product->get_sale_price())), 2);
+        $oldPrice = \round(\floatval(wc_get_price_including_tax($product, $product->get_regular_price())), 2);
+    } else {
+        $price = \round(\floatval(wc_get_price_excluding_tax($product, $product->get_sale_price())), 2);
+        $oldPrice = \round(\floatval(wc_get_price_excluding_tax($product, $product->get_regular_price())), 2);
+    }
+
     $woocommerce_product = array(
         'id' => $product->get_id(),
         'title' => $product->get_title(),
         'description' => $product->get_description(),
         'short_description' => $product->get_short_description(),
         'image' => wp_get_attachment_url($product->get_image_id()),
-        'regular_price' => \round(\floatval($product->get_regular_price()), 2),
-        'sale_price' => \round(\floatval($product->get_sale_price())),
+        'regular_price' => $oldPrice,
+        'sale_price' => $price,
         'categories' => $categories,
         'sku' => $product->get_sku(),
         'product_url' => get_permalink($product->get_id()),
@@ -40,9 +47,6 @@ function serialize_product_for_apisearch($product)
         'tags' => $tags,
         'creation_datetime' => $creation_timestamp, // Add creation datetime in Unix timestamp format
     );
-
-    $currency_code = get_woocommerce_currency();
-    $currency_symbol = get_currency_symbol($currency_code);
 
     $apisearch_product = array(
         'uuid' => array(
@@ -55,9 +59,8 @@ function serialize_product_for_apisearch($product)
             'image_id' => $product->get_image_id(),
             'image' => $woocommerce_product['image'],
             'old_price' => $woocommerce_product['regular_price'],
-            'old_price_with_currency' => $woocommerce_product['regular_price'] . ' ' . $currency_symbol,
-            'price' => $woocommerce_product['sale_price'],
-            'price_with_currency' => $woocommerce_product['sale_price'] . ' ' . $currency_symbol,
+            'old_price_with_currency' => wp_price($woocommerce_product['regular_price']),
+            'price_with_currency' => wp_price($woocommerce_product['sale_price']),
             'show_price' => true,
             'supplier_reference' => [],
         ),
@@ -102,9 +105,9 @@ function serialize_product_for_apisearch($product)
             $max_price = wc_get_product(end($variations)['variation_id'])->get_price();
 
             $apisearch_product['metadata']['min_price'] = $min_price;
-            $apisearch_product['metadata']['min_price_with_currency'] = $min_price . ' ' . $currency_symbol;
+            $apisearch_product['metadata']['min_price_with_currency'] = wp_price($min_price);
             $apisearch_product['metadata']['max_price'] = $max_price;
-            $apisearch_product['metadata']['max_price_with_currency'] = $max_price . ' ' . $currency_symbol;
+            $apisearch_product['metadata']['max_price_with_currency'] = wp_price($max_price);
         }
     }
 

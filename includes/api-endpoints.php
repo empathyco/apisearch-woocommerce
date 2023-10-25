@@ -7,6 +7,9 @@ function get_apisearch_feed()
     // Get the optional lang parameter from the URL
     $lang = isset($_GET['lang']) ? sanitize_text_field($_GET['lang']) : '';
 
+    $withTax = isset($_GET['tax']) ? $_GET['tax'] : true;
+    $withTax = boolval($withTax);
+
     // Retrieve the plugin settings from the database
     $index_product_without_image = get_option('index_product_without_image');
 
@@ -44,7 +47,7 @@ function get_apisearch_feed()
                 }
             }
             // Serialize each product and echo it as JSON
-            $apisearch_product = serialize_product_for_apisearch($product);
+            $apisearch_product = serialize_product_for_apisearch($product, $withTax);
             echo json_encode($apisearch_product);
             echo PHP_EOL;
             ob_flush();
