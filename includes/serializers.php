@@ -109,7 +109,7 @@ function serialize_product_for_apisearch($product, $withTax)
             $apisearch_product['metadata']['price_with_currency'] = strip_tags(wc_price($min_price));
             $apisearch_product['metadata']['min_price_with_currency'] = $apisearch_product['metadata']['price_with_currency'] ;
             $apisearch_product['metadata']['max_price'] = $max_price;
-            $apisearch_product['metadata']['max_price_with_currency'] = strip_tags(wp_price($max_price));
+            $apisearch_product['metadata']['max_price_with_currency'] = strip_tags(wc_price($max_price));
         }
     }
 
