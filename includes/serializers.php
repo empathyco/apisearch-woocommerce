@@ -59,8 +59,8 @@ function serialize_product_for_apisearch($product, $withTax)
             'image_id' => $product->get_image_id(),
             'image' => $woocommerce_product['image'],
             'old_price' => $woocommerce_product['regular_price'],
-            'old_price_with_currency' => wp_price($woocommerce_product['regular_price']),
-            'price_with_currency' => wp_price($woocommerce_product['sale_price']),
+            'old_price_with_currency' => strip_tags(wc_price($woocommerce_product['regular_price'])),
+            'price_with_currency' => strip_tags(wc_price($woocommerce_product['sale_price'])),
             'show_price' => true,
             'supplier_reference' => [],
         ),
@@ -104,10 +104,12 @@ function serialize_product_for_apisearch($product, $withTax)
             // Last variation has the maximum price
             $max_price = wc_get_product(end($variations)['variation_id'])->get_price();
 
+            $apisearch_product['indexed_metadata']['price'] = $min_price;
             $apisearch_product['metadata']['min_price'] = $min_price;
-            $apisearch_product['metadata']['min_price_with_currency'] = wp_price($min_price);
+            $apisearch_product['metadata']['price_with_currency'] = strip_tags(wc_price($min_price));
+            $apisearch_product['metadata']['min_price_with_currency'] = $apisearch_product['metadata']['price_with_currency'] ;
             $apisearch_product['metadata']['max_price'] = $max_price;
-            $apisearch_product['metadata']['max_price_with_currency'] = wp_price($max_price);
+            $apisearch_product['metadata']['max_price_with_currency'] = strip_tags(wp_price($max_price));
         }
     }
 
