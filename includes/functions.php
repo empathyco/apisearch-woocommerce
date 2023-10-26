@@ -38,16 +38,6 @@ function custom_woocommerce_search_header() {
                     charSet='UTF-8'
                     crossOrigin="anonymous"
             ></script>
-            <div class="apisearch-search-input-wrapper">
-                <input type="search"
-                       id="apisearch__search_input_1"
-                       class="search-field"
-                       placeholder="<?php echo esc_attr__('Search products', 'woocommerce'); ?>"
-                       value="<?php echo get_search_query(); ?>"
-                       name="s"
-                       title="<?php echo esc_attr__('Search for:', 'woocommerce'); ?>
-                ">
-            </div>
             <?php
         }
     }
