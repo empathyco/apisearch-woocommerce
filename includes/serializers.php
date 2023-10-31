@@ -36,6 +36,17 @@ function serialize_product_for_apisearch($product, $withTax)
         $oldPrice = \round(\floatval(wc_get_price_excluding_tax($product, $product->get_regular_price())), 2);
     }
 
+    $authorId = get_post_field( 'post_author', $product->get_id());
+    global $apisearchAuthors;
+
+    if (!is_array($apisearchAuthors)) {
+        $apisearchAuthors = [];
+    }
+
+    if (!array_key_exists($authorId, $apisearchAuthors)) {
+        $apisearchAuthors[$authorId] = get_author_name($authorId);
+    }
+
     $woocommerce_product = array(
         'id' => $product->get_id(),
         'title' => $product->get_title(),
@@ -51,7 +62,7 @@ function serialize_product_for_apisearch($product, $withTax)
         'product_attributes' => $product->get_attributes(),
         'tags' => $tags,
         'creation_datetime' => $creation_timestamp, // Add creation datetime in Unix timestamp format,
-        'author' => get_post_field( 'post_author', $product->get_id()),
+        'author' => $apisearchAuthors[$authorId],
     );
 
     $apisearch_product = array(
