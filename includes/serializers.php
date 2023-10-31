@@ -50,7 +50,8 @@ function serialize_product_for_apisearch($product, $withTax)
         'product_type' => $product->get_type(),
         'product_attributes' => $product->get_attributes(),
         'tags' => $tags,
-        'creation_datetime' => $creation_timestamp, // Add creation datetime in Unix timestamp format
+        'creation_datetime' => $creation_timestamp, // Add creation datetime in Unix timestamp format,
+        'author' => get_post_field( 'post_author', $product->get_id()),
     );
 
     $apisearch_product = array(
@@ -77,11 +78,13 @@ function serialize_product_for_apisearch($product, $withTax)
             'product_type' => $woocommerce_product['product_type'],
             'reference' => $woocommerce_product['sku'],
             "date_add" => $woocommerce_product['creation_datetime'],
+            'author' => $woocommerce_product['author'],
         ),
         'searchable_metadata' => array(
             'name' => (string)$woocommerce_product['title'],
             'categories' => $categories,
             'tags' => $woocommerce_product['tags'],
+            'author' => $woocommerce_product['author'],
         ),
         'suggest' => $categories,
         'exact_matching_metadata' => clean_list_apisearch(array(
