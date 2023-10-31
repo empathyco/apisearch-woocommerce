@@ -90,6 +90,7 @@ function serialize_product_for_apisearch($product, $withTax)
             'reference' => $woocommerce_product['sku'],
             "date_add" => $woocommerce_product['creation_datetime'],
             'author' => $woocommerce_product['author'],
+            'tags' => $woocommerce_product['tags'],
         ),
         'searchable_metadata' => array(
             'name' => (string)$woocommerce_product['title'],
