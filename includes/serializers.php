@@ -63,7 +63,25 @@ function serialize_product_for_apisearch($product, $withTax)
         'tags' => $tags,
         'creation_datetime' => $creation_timestamp, // Add creation datetime in Unix timestamp format,
         'author' => $apisearchAuthors[$authorId],
+
+        'review_count' => $product->get_rating_count(),
+        'review_stars' => $product->get_average_rating(),
+        'catalog_visibility' => $product->get_catalog_visibility(),
     );
+
+    $isVisible = empty($woocommerce_product['catalog_visibility']) || in_array($woocommerce_product['catalog_visibility'], ['visible', 'search']);
+    if (!$isVisible) {
+        return;
+    }
+
+    $attributes = [];
+    foreach ($woocommerce_product['product_attributes'] as $attribute) {
+        if (!$attribute->get_visible()) {
+            continue;
+        }
+
+        $attributes[$attribute->get_name()] = $attribute->get_options();
+    }
 
     $apisearch_product = array(
         'uuid' => array(
@@ -80,8 +98,9 @@ function serialize_product_for_apisearch($product, $withTax)
             'price_with_currency' => price_with_currency($woocommerce_product['sale_price']),
             'show_price' => true,
             'supplier_reference' => [],
+            'review_count' => $woocommerce_product['review_count'],
         ),
-        'indexed_metadata' => array(
+        'indexed_metadata' => array_merge(array(
             'as_version' => mt_rand(1000, 9999),
             'price' => $woocommerce_product['sale_price'],
             'with_discount' => $woocommerce_product['regular_price'] - $woocommerce_product['sale_price'] > 0,
@@ -91,13 +110,14 @@ function serialize_product_for_apisearch($product, $withTax)
             "date_add" => $woocommerce_product['creation_datetime'],
             'author' => $woocommerce_product['author'],
             'tags' => $woocommerce_product['tags'],
-        ),
-        'searchable_metadata' => array(
+            'review_stars' => $woocommerce_product['review_stars'],
+        ), $attributes),
+        'searchable_metadata' => array_merge(array(
             'name' => (string)$woocommerce_product['title'],
             'categories' => $categories,
             'tags' => $woocommerce_product['tags'],
             'author' => $woocommerce_product['author'],
-        ),
+        ), $attributes),
         'suggest' => $categories,
         'exact_matching_metadata' => clean_list_apisearch(array(
             $woocommerce_product['sku'],

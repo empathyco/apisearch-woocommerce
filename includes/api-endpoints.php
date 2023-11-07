@@ -55,6 +55,10 @@ function get_apisearch_feed()
                 var_dump($exception->getLine());
                 die();
             }
+
+            if (empty($apisearch_product)) {
+                continue;
+            }
             echo json_encode($apisearch_product);
             echo PHP_EOL;
             ob_flush();
