@@ -29,11 +29,20 @@ function serialize_product_for_apisearch($product, $withTax)
     $index_descriptions = get_option('index_description');
 
     if ($withTax) {
-        $price = \round(\floatval(wc_get_price_including_tax($product, $product->get_sale_price())), 2);
-        $oldPrice = \round(\floatval(wc_get_price_including_tax($product, $product->get_regular_price())), 2);
+        $price = \round(\floatval(wc_get_price_including_tax($product, [
+            'price' => $product->get_sale_price()
+        ])), 2);
+        $oldPrice = \round(\floatval(wc_get_price_including_tax($product, [
+            'price' => $product->get_regular_price()
+        ])), 2);
+
     } else {
-        $price = \round(\floatval(wc_get_price_excluding_tax($product, $product->get_sale_price())), 2);
-        $oldPrice = \round(\floatval(wc_get_price_excluding_tax($product, $product->get_regular_price())), 2);
+        $price = \round(\floatval(wc_get_price_excluding_tax($product, [
+            'price' => $product->get_sale_price()
+        ])), 2);
+        $oldPrice = \round(\floatval(wc_get_price_excluding_tax($product, [
+            'price' => $product->get_regular_price()
+        ])), 2);
     }
 
     $authorId = get_post_field( 'post_author', $product->get_id());
