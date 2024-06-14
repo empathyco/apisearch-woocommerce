@@ -92,6 +92,16 @@ function serialize_product_for_apisearch($product, $withTax)
         $attributes[$attribute->get_name()] = $attribute->get_options();
     }
 
+    $customFields = [];
+    foreach (get_post_meta( $product->get_id()) as $field => $values) {
+        if (strpos($field, '_') === 0) {
+            continue;
+        }
+
+        $customFields[$field] = $values;
+    };
+
+    $attributes = array_merge($attributes, $customFields);
     $apisearch_product = array(
         'uuid' => array(
             "id" => (string)$woocommerce_product['id'],
