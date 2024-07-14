@@ -176,6 +176,17 @@ function serialize_product_for_apisearch($product, $withTax)
             $apisearch_product['metadata']['max_price'] = $maxPrice;
             $apisearch_product['metadata']['max_price_with_currency'] = price_with_currency($maxPrice);
         }
+
+        $variationsReferences = array();
+        foreach ($variations as $variation) {
+            $variationsReferences[] = $variation['reference'];
+            $variationsReferences[] = $variation['sku'];
+        }
+
+        $apisearch_product['exact_matching_metadata'] = clean_list_apisearch(array_merge(
+            $apisearch_product['exact_matching_metadata'],
+            $variationsReferences
+        ));
     }
 
     if ($index_descriptions) {
