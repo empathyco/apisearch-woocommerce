@@ -14,7 +14,7 @@ function get_apisearch_feed()
     $index_product_without_image = get_option('index_product_without_image');
 
     // Define common query parameters
-    $per_page = 10; // Set your desired number of products per batch
+    $per_page = 100; // Set your desired number of products per batch
     $page = 1;
 
     header('Content-Type:text/plain; charset=utf-8');
@@ -23,6 +23,8 @@ function get_apisearch_feed()
         // Initialize the query args array
         $args = array(
             'status' => 'publish',
+            'orderby' => 'ID',
+            'order' => 'DESC',
             'limit' => $per_page,
             'page' => $page,
         );
