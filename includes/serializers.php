@@ -28,21 +28,34 @@ function serialize_product_for_apisearch($product, $withTax)
     $index_short_descriptions = get_option('index_short_descriptions');
     $index_descriptions = get_option('index_description');
 
+    $dateOfferStarts = $product->get_date_on_sale_from();
+    $dateOfferEnds = $product->get_date_on_sale_to();
+    $now = new \DateTime('now', wp_timezone());
+
+    $productCanBeInOffer = (
+        (!$dateOfferStarts || $dateOfferStarts <= $now) &&
+        (!$dateOfferEnds || $dateOfferEnds > $now)
+    );
+
     if ($withTax) {
-        $price = \round(\floatval(wc_get_price_including_tax($product, [
-            'price' => $product->get_sale_price()
-        ])), 2);
         $oldPrice = \round(\floatval(wc_get_price_including_tax($product, [
             'price' => $product->get_regular_price()
         ])), 2);
+        $price = $productCanBeInOffer
+            ? \round(\floatval(wc_get_price_including_tax($product, [
+                'price' => $product->get_sale_price()
+            ])), 2)
+            : $oldPrice;
 
     } else {
-        $price = \round(\floatval(wc_get_price_excluding_tax($product, [
-            'price' => $product->get_sale_price()
-        ])), 2);
         $oldPrice = \round(\floatval(wc_get_price_excluding_tax($product, [
             'price' => $product->get_regular_price()
         ])), 2);
+        $price = $productCanBeInOffer
+            ? \round(\floatval(wc_get_price_excluding_tax($product, [
+                'price' => $product->get_sale_price()
+            ])), 2)
+            : $oldPrice;
     }
 
     $authorId = get_post_field( 'post_author', $product->get_id());
