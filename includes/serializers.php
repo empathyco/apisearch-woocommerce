@@ -14,6 +14,17 @@ function price_with_currency($price)
     return html_entity_decode(strip_tags(wc_price($price)));
 }
 
+function value_is_serialized($value)
+{
+    if (!is_string($value)) {
+        return false;
+    }
+
+    $unserializedValue = maybe_unserialize($value);
+
+    return $value !== $unserializedValue && $unserializedValue !== false;
+}
+
 /**
  * @param $product
  * @param $withTax
@@ -102,6 +113,11 @@ function serialize_product_for_apisearch($product, $withTax)
             continue;
         }
 
+        $value = $attribute->get_options();
+        if (value_is_serialized($value)) {
+            continue;
+        }
+
         $attributes[$attribute->get_name()] = $attribute->get_options();
     }
 
@@ -109,6 +125,19 @@ function serialize_product_for_apisearch($product, $withTax)
     foreach (get_post_meta( $product->get_id()) as $field => $values) {
         if (strpos($field, '_') === 0) {
             continue;
+        }
+
+        if (is_array($values)) {
+            $values = array_filter($values, function($value) {
+                return !value_is_serialized($value);
+            });
+            if (empty($values)) {
+                continue;
+            }
+        } else {
+            if (value_is_serialized($values)) {
+                continue;
+            }
         }
 
         $customFields[$field] = $values;
