@@ -25,6 +25,15 @@ function value_is_serialized($value)
     return $value !== $unserializedValue && $unserializedValue !== false;
 }
 
+function filter_serialized($value)
+{
+    $values = is_array($value) ? $value : [$value];
+
+    return array_filter($values, function($value) {
+        return !value_is_serialized($value);
+    });
+}
+
 /**
  * @param $product
  * @param $withTax
@@ -114,33 +123,26 @@ function serialize_product_for_apisearch($product, $withTax)
         }
 
         $value = $attribute->get_options();
-        if (value_is_serialized($value)) {
+        $value = filter_serialized($value);
+        if (empty($value)) {
             continue;
         }
 
-        $attributes[$attribute->get_name()] = $attribute->get_options();
+        $attributes[$attribute->get_name()] = $value;
     }
 
     $customFields = [];
-    foreach (get_post_meta( $product->get_id()) as $field => $values) {
+    foreach (get_post_meta( $product->get_id()) as $field => $value) {
         if (strpos($field, '_') === 0) {
             continue;
         }
 
-        if (is_array($values)) {
-            $values = array_filter($values, function($value) {
-                return !value_is_serialized($value);
-            });
-            if (empty($values)) {
-                continue;
-            }
-        } else {
-            if (value_is_serialized($values)) {
-                continue;
-            }
+        $value = filter_serialized($value);
+        if (empty($value)) {
+            continue;
         }
 
-        $customFields[$field] = $values;
+        $customFields[$field] = $value;
     };
 
     $attributes = array_merge($attributes, $customFields);
