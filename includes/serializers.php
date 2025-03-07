@@ -242,7 +242,7 @@ function serialize_product_for_apisearch($product, $withTax)
         $apisearch_product['searchable_metadata']['short_description'] = $woocommerce_product['short_description'];
     }
 
-    return $apisearch_product;
+    return apisearch_complement_product($apisearch_product);
 }
 
 function get_currency_symbol($currency_code) {

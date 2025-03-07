@@ -4,6 +4,8 @@
 // Function to retrieve WooCommerce products and serialize them
 function get_apisearch_feed()
 {
+    require_once __DIR__ . '/plugins.php';
+
     // Get the optional lang parameter from the URL
     $lang = isset($_GET['lang']) ? sanitize_text_field($_GET['lang']) : '';
 
