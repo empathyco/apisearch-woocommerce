@@ -42,7 +42,7 @@ function custom_woocommerce_search_header() {
         }
     }
 }
-add_action('wp_head', 'custom_woocommerce_search_header');
+add_action('wp_footer', 'custom_woocommerce_search_header');
 
 function isApisearchActive() {
     return get_option('show_search_input') == "1";
